@@ -39,7 +39,7 @@ def load_training_data():
     preprocessor = ImagePreprocessor(target_size=(28, 28))
     
     # Get all the image files
-    image_dir = "../character_images"
+    image_dir = "../comprehensive_character_images"
     image_files = [f for f in os.listdir(image_dir) if f.endswith('.png')]
     
     print(f" Found {len(image_files)} character images")
