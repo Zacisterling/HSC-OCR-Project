@@ -8,6 +8,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 import os
 import pickle
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 class OCRModel:
     """CNN-based OCR model for character recognition"""
@@ -122,7 +123,7 @@ class OCRModel:
         total_params = self.model.count_params()
         print(f"\n Total Parameters: {total_params:,}")
     
-    def prepare_data(self, images, labels):
+    def prepare_data(self, images, labels, apply_augmentation=False):
         
         #Prepare data for training
         #Args:
@@ -153,6 +154,12 @@ class OCRModel:
         X_train, X_test, y_train, y_test = train_test_split(
             X, y_categorical, test_size=0.2, random_state=42, stratify=y_categorical
         )
+
+        # Add this after your train_test_split line:
+        if apply_augmentation:
+            print("Applying Level 4 rotation augmentation...")
+            X_train = self.apply_rotation_augmentation(X_train)
+            y_train = np.concatenate([y_train, y_train])
         
         print(f"Training set: {X_train.shape[0]} samples")
         print(f"Test set: {X_test.shape[0]} samples")
@@ -309,6 +316,35 @@ class OCRModel:
             
         except Exception as e:
             print(f" Error loading model: {e}")
+
+    def apply_rotation_augmentation(self, X_train):
+        """Apply ±20° rotation augmentation for Level 4 requirements"""
+        from scipy.ndimage import rotate
+        import random
+        
+        augmented_images = []
+        
+        for img in X_train:
+            # Original image
+            augmented_images.append(img)
+            
+            # Create 1 rotated version per original
+            angle = random.uniform(-20, 20)  # Random angle between -20 and +20 degrees
+            
+            # Handle both (28,28) and (28,28,1) shapes
+            if len(img.shape) == 3:
+                rotated_img = rotate(img[:,:,0], angle, reshape=False, cval=1.0)
+                rotated_img = rotated_img.reshape(img.shape)
+            else:
+                rotated_img = rotate(img, angle, reshape=False, cval=1.0)
+            
+            # Ensure values stay in [0,1] range
+            rotated_img = np.clip(rotated_img, 0, 1)
+            
+            augmented_images.append(rotated_img)
+        
+        print(f"Augmentation complete: {len(X_train)} → {len(augmented_images)} images")
+        return np.array(augmented_images)
 
 # Test the model class
 if __name__ == "__main__":

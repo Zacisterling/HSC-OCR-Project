@@ -98,6 +98,11 @@ def create_character_image(character, font_path, font_name, style, font_size):
     Create a single character image
     """
     try:
+
+        # DEBUG: Show what we're actually drawing
+        if font_name == "Arial" and style == "regular":  # Only debug first font
+            print(f"      🎨 Drawing '{character}' (ord: {ord(character)}) -> filename will be '{character}'")
+        
         # Load the font
         font = ImageFont.truetype(font_path, font_size)
         
@@ -121,9 +126,20 @@ def create_character_image(character, font_path, font_name, style, font_size):
         else:
             char_name = character
 
-        filename = f"{font_name}_{style}_{font_size}_{char_name}.png"
+        # updated file names to have upper or lower so it doesn't override cause mac is stupid stupid stupid (we hate steve jobs)
+        if character.isupper():
+            filename = f"{font_name}_{style}_{font_size}_UPPER_{char_name}.png"
+        elif character.islower():
+            filename = f"{font_name}_{style}_{font_size}_LOWER_{char_name}.png"
+        else:
+            filename = f"{font_name}_{style}_{font_size}_{char_name}.png"
+
         filepath = os.path.join(output_dir, filename)
         
+        # DEBUG: Show what file we're saving
+        if font_name == "Arial" and style == "regular":
+            print(f"      💾 Saving as: {filename}")
+
         # Save image
         img.save(filepath)
         return True
@@ -152,6 +168,15 @@ def generate_comprehensive_dataset():
 
     # Collect all characters
     all_characters = uppercase_letters + lowercase_letters + numbers + special_chars
+    # DEBUG: Print what characters we're actually processing
+    print(f"🔍 DEBUG - Character breakdown:")
+    print(f"  Uppercase: {len(uppercase_letters)} - {uppercase_letters[:5]}...")
+    print(f"  Lowercase: {len(lowercase_letters)} - {lowercase_letters[:5]}...")
+    print(f"  Numbers: {len(numbers)} - {numbers}")
+    print(f"  Specials: {len(special_chars)} - {special_chars}")
+    print(f"  Total: {len(all_characters)}")
+    print(f"  First 10 characters: {all_characters[:10]}")
+    print()
     
     total_images = len(font_configs) * 3 * len(all_characters)  # fonts * styles * characters
     print(f"🎯 Target: {total_images} total images")
@@ -175,6 +200,8 @@ def generate_comprehensive_dataset():
             
             # Process each character
             for character in all_characters:
+                if successful_images < 10:  # Only print first 10 for debugging
+                    print(f"    🔍 Processing character: '{character}' (ord: {ord(character)})")
                 success = create_character_image(character, font_path, font_name, style, font_size)
                 if success:
                     successful_images += 1

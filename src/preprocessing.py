@@ -133,6 +133,10 @@ class ImagePreprocessor:
         if show_steps:
             self.visualize_preprocessing(original, image, image_path)
         
+        # Add channel dimension for CNN
+        if len(image.shape) == 2:
+            image = image.reshape(28, 28, 1)
+
         return image
     
     def process_batch(self, image_folder):
