@@ -201,3 +201,5 @@ character_images/
 # Project specific ignores
 ocr_env/
 .DS_Store
+qmnist_dataset/
+
