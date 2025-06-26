@@ -202,4 +202,7 @@ character_images/
 ocr_env/
 .DS_Store
 qmnist_dataset/
-
+Fonts/
+enhanced_character_images/
+character_images/
+comprehensive_character_images/
