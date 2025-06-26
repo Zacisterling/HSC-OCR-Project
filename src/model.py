@@ -158,9 +158,9 @@ class OCRModel:
         print(f"Training set: {X_train.shape[0]} samples")
         print(f"Test set: {X_test.shape[0]} samples")
 
-        # add rotation augmentation if its true 
+        # add rotation+size variation augmentation if its true
         if apply_augmentation:
-            X_train, y_train = self.apply_simple_rotation(X_train, y_train)
+            X_train, y_train = self.apply_combined_augmentation(X_train, y_train)
             print(f"After augmentation - Training set: {X_train.shape[0]} samples")
 
         return X_train, X_test, y_train, y_test
@@ -316,38 +316,80 @@ class OCRModel:
         except Exception as e:
             print(f" Error loading model: {e}")
 
-    def apply_simple_rotation(self, X_train, y_train):
+    def apply_combined_augmentation(self, X_train, y_train):
         """
-        Apply simple rotation augmentation using numpy
-        Creates one rotated copy of each image
+        Apply Level 5 augmentation: rotation + size variations
+        Creates 4 groups: original, rotation-only, size-only, rotation+size
         """
-        print("🔄 Applying Level 4 rotation augmentation...")
+        print("🎯 Applying Level 5 combined augmentation...")
         
         augmented_images = []
         augmented_labels = []
         
-        # Keep all original images and labels
-        augmented_images.extend(X_train)
-        augmented_labels.extend(y_train)
+        # Size range: 0.5x to 1.2x
+        size_multipliers = [0.5, 0.7, 0.9, 1.2]
         
-        # Add rotated versions
         for img, label in zip(X_train, y_train):
-            # Random rotation angle between -20 and +20 degrees
+            # 1. Original image (no changes)
+            augmented_images.append(img)
+            augmented_labels.append(label)
+            
+            # 2. Rotated image (rotation only)
             angle = np.random.uniform(-20, 20)
-            
-            # Simple rotation using numpy (preserves format exactly)
-            from scipy.ndimage import rotate
-            
-            # Remove channel dimension for rotation, then add back
-            img_2d = img.squeeze()  # (28, 28, 1) -> (28, 28)
-            rotated_2d = rotate(img_2d, angle, reshape=False, cval=1.0)
-            rotated_img = np.expand_dims(rotated_2d, axis=-1)  # (28, 28) -> (28, 28, 1)
-            
+            rotated_img = self.apply_rotation_to_image(img, angle)
             augmented_images.append(rotated_img)
             augmented_labels.append(label)
+            
+            # 3. Size-varied image (size only)
+            size_mult = np.random.choice(size_multipliers)
+            sized_img = self.apply_size_to_image(img, size_mult)
+            augmented_images.append(sized_img)
+            augmented_labels.append(label)
+            
+            # 4. Rotated + Size-varied image (both changes)
+            angle = np.random.uniform(-20, 20)
+            size_mult = np.random.choice(size_multipliers)
+            combo_img = self.apply_rotation_to_image(img, angle)
+            combo_img = self.apply_size_to_image(combo_img, size_mult)
+            augmented_images.append(combo_img)
+            augmented_labels.append(label)
         
-        print(f"✅ Rotation complete: {len(X_train)} → {len(augmented_images)} images")
+        print(f"✅ Combined augmentation complete: {len(X_train)} → {len(augmented_images)} images")
+        print(f"   Groups: Original + Rotated + Sized + Rotated&Sized = 4x original")
+        
         return np.array(augmented_images), np.array(augmented_labels)
+
+    def apply_rotation_to_image(self, img, angle):
+        """Apply rotation to a single image"""
+        from scipy.ndimage import rotate
+        img_2d = img.squeeze()
+        rotated_2d = rotate(img_2d, angle, reshape=False, cval=1.0)
+        return np.expand_dims(rotated_2d, axis=-1)
+
+    def apply_size_to_image(self, img, size_multiplier):
+        """Apply size variation to a single image"""
+        from PIL import Image
+        
+        # Convert to PIL for resizing
+        img_2d = (img.squeeze() * 255).astype(np.uint8)
+        pil_img = Image.fromarray(img_2d)
+        
+        # Calculate new size
+        new_size = int(28 * size_multiplier)
+        new_size = max(8, min(40, new_size))  # Keep reasonable bounds
+        
+        # Resize
+        resized = pil_img.resize((new_size, new_size), Image.Resampling.LANCZOS)
+        
+        # Center on 28x28 canvas
+        canvas = Image.new('L', (28, 28), color=255)
+        paste_x = (28 - new_size) // 2
+        paste_y = (28 - new_size) // 2
+        canvas.paste(resized, (paste_x, paste_y))
+        
+        # Convert back
+        result = np.array(canvas).astype(np.float32) / 255.0
+        return np.expand_dims(result, axis=-1)
 
 # Test the model class
 if __name__ == "__main__":
