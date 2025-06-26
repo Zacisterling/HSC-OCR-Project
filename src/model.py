@@ -155,15 +155,14 @@ class OCRModel:
             X, y_categorical, test_size=0.2, random_state=42, stratify=y_categorical
         )
 
-        # Add this after your train_test_split line:
-        if apply_augmentation:
-            print("Applying Level 4 rotation augmentation...")
-            X_train = self.apply_rotation_augmentation(X_train)
-            y_train = np.concatenate([y_train, y_train])
-        
         print(f"Training set: {X_train.shape[0]} samples")
         print(f"Test set: {X_test.shape[0]} samples")
-        
+
+        # add rotation augmentation if its true 
+        if apply_augmentation:
+            X_train, y_train = self.apply_simple_rotation(X_train, y_train)
+            print(f"After augmentation - Training set: {X_train.shape[0]} samples")
+
         return X_train, X_test, y_train, y_test
     
     def train_model(self, X_train, y_train, X_test, y_test, epochs=50, batch_size=32):
@@ -317,34 +316,38 @@ class OCRModel:
         except Exception as e:
             print(f" Error loading model: {e}")
 
-    def apply_rotation_augmentation(self, X_train):
-        """Apply ±20° rotation augmentation for Level 4 requirements"""
-        from scipy.ndimage import rotate
-        import random
+    def apply_simple_rotation(self, X_train, y_train):
+        """
+        Apply simple rotation augmentation using numpy
+        Creates one rotated copy of each image
+        """
+        print("🔄 Applying Level 4 rotation augmentation...")
         
         augmented_images = []
+        augmented_labels = []
         
-        for img in X_train:
-            # Original image
-            augmented_images.append(img)
+        # Keep all original images and labels
+        augmented_images.extend(X_train)
+        augmented_labels.extend(y_train)
+        
+        # Add rotated versions
+        for img, label in zip(X_train, y_train):
+            # Random rotation angle between -20 and +20 degrees
+            angle = np.random.uniform(-20, 20)
             
-            # Create 1 rotated version per original
-            angle = random.uniform(-20, 20)  # Random angle between -20 and +20 degrees
+            # Simple rotation using numpy (preserves format exactly)
+            from scipy.ndimage import rotate
             
-            # Handle both (28,28) and (28,28,1) shapes
-            if len(img.shape) == 3:
-                rotated_img = rotate(img[:,:,0], angle, reshape=False, cval=1.0)
-                rotated_img = rotated_img.reshape(img.shape)
-            else:
-                rotated_img = rotate(img, angle, reshape=False, cval=1.0)
-            
-            # Ensure values stay in [0,1] range
-            rotated_img = np.clip(rotated_img, 0, 1)
+            # Remove channel dimension for rotation, then add back
+            img_2d = img.squeeze()  # (28, 28, 1) -> (28, 28)
+            rotated_2d = rotate(img_2d, angle, reshape=False, cval=1.0)
+            rotated_img = np.expand_dims(rotated_2d, axis=-1)  # (28, 28) -> (28, 28, 1)
             
             augmented_images.append(rotated_img)
+            augmented_labels.append(label)
         
-        print(f"Augmentation complete: {len(X_train)} → {len(augmented_images)} images")
-        return np.array(augmented_images)
+        print(f"✅ Rotation complete: {len(X_train)} → {len(augmented_images)} images")
+        return np.array(augmented_images), np.array(augmented_labels)
 
 # Test the model class
 if __name__ == "__main__":

@@ -76,20 +76,6 @@ def train_ocr_model():
     
     #Load training data
     images, labels = load_training_data()
-    # DIAGNOSTIC CODE - ADD THIS:
-    print(f"🔍 DEBUGGING INFO:")
-    print(f"Total images loaded: {len(images)}")
-    print(f"Sample image shape: {images[0].shape}")
-    print(f"Sample image dtype: {images[0].dtype}")
-    print(f"Sample image min/max: {images[0].min():.3f}/{images[0].max():.3f}")
-    print(f"All unique labels: {sorted(set(labels))}")
-    print(f"Total unique characters: {len(set(labels))}")
-    print(f"Expected characters: A-Z (26) + a-z (26) + 0-9 (10) + symbols (12) = 74")
-    print(f"Sample labels: {labels[:10]}")
-
-    # Check for any None or invalid images
-    none_count = sum(1 for img in images if img is None)
-    print(f"None/invalid images: {none_count}")
     
     #create the model
     num_classes = len(set(labels))
@@ -102,7 +88,7 @@ def train_ocr_model():
     ocr_model.show_model_summary()
     
     #prep data for training
-    X_train, X_test, y_train, y_test = ocr_model.prepare_data(images, labels, apply_augmentation=False)
+    X_train, X_test, y_train, y_test = ocr_model.prepare_data(images, labels, apply_augmentation=True)
     
     #train
     print("\n Starting training...")
