@@ -185,7 +185,7 @@ class OCRModel:
         callbacks = [
             keras.callbacks.EarlyStopping(
                 monitor='val_accuracy',
-                patience=10,
+                patience=4,
                 restore_best_weights=True,
                 verbose=1
             ),
