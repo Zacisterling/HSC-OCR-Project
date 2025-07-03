@@ -85,10 +85,10 @@ class ComprehensiveTestFramework:
         print(f"   Target: {num_test_cases} test cases")
         
         if model_type == "font":
-            dataset_dir = "../comprehensive_character_images"
+            dataset_dir = "../FONTS_comprehensive_character_images"
             file_filter = lambda f: 'HANDWRITTEN' not in f
         else:  # handwritten
-            dataset_dir = "../emnist_character_images"
+            dataset_dir = "../HANDWRITTEN_emnist_character_images"
             file_filter = lambda f: True
         
         if not os.path.exists(dataset_dir):

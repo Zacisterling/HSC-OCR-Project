@@ -205,7 +205,7 @@ qmnist_dataset/
 Fonts/
 enhanced_character_images/
 character_images/
-comprehensive_character_images/
+FONTS_comprehensive_character_images/
 nonlowermessedup_character_images/
-emnist_character_images/
+HANDWRITTEN_emnist_character_images/
 test_results/
