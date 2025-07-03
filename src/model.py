@@ -102,7 +102,7 @@ class OCRModel:
         model.compile(
             optimizer=keras.optimizers.Adam(learning_rate=0.001),
             loss='categorical_crossentropy',
-            metrics=['accuracy', 'top_3_accuracy']
+            metrics=['accuracy']
         )
         
         self.model = model

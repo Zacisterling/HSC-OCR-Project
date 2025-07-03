@@ -11,7 +11,7 @@ from PIL import Image
 import os
 import string
 
-def load_emnist_dataset(save_dir="../emnist_character_images"):
+def load_emnist_dataset(save_dir="../emnist_character_images2"):
     """
     Load EMNIST dataset and convert to our image format
     
@@ -207,7 +207,7 @@ def verify_emnist_integration():
     print("\n🔍 Verifying EMNIST Integration")
     print("=" * 30)
     
-    save_dir = "../emnist_character_images"
+    save_dir = "../emnist_character_images2"
     
     if not os.path.exists(save_dir):
         print(f"❌ EMNIST directory not found: {save_dir}")
